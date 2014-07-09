@@ -1,0 +1,119 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>WebGL 1</title>
+<link rel="stylesheet" type="text/css" media="all" href="style.css" />
+
+<script type="text/javascript" src="./js/glMatrix.js"></script>
+<script type="text/javascript" src="./js/webgl-utils.js"></script>
+<script type="text/javascript" src="./js/tools.js"></script>
+
+<script type="text/javascript" src="./js/shaders.js"></script>
+<script type="text/javascript" src="./js/geometry.js"></script>
+<script type="text/javascript" src="./js/textures.js"></script>
+
+<script type="text/javascript" src="./js/e.js"></script>
+
+
+
+<!-- ------------------------------------------------------------- -->
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vTransformedNormal;
+    varying vec4 vPosition;
+
+    uniform sampler2D uSampler;
+    uniform sampler2D uSamplernormalMap;
+
+    varying mat3 tbn;
+
+
+    void main(void) {
+
+        vec3 lightPos = vec3(0.0,0.0,1.0);
+        vec3 eyePos = vec3(0.0,0.0,1.0);
+
+        vec3 normal = normalize(vTransformedNormal);
+        vec4 NormalMap = texture2D(uSamplernormalMap, vec2(vTextureCoord.s, vTextureCoord.t))  * 2.0 - 1.0;
+
+        normal = (tbn * NormalMap.rgb) ;
+
+
+        float lambert = max(dot(normal, lightPos), 0.0);
+        
+        vec3  blinn   = normalize(eyePos + normal);
+        vec3  phong   = reflect(-eyePos,normal);
+
+       
+        float spec    = pow(max(dot(lightPos,phong),0.0), 45.0);
+
+
+
+        vec4 fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+
+        //fragmentColor = fragmentColor + texture2D(uSamplernormalMap, vec2(vTextureCoord.s, vTextureCoord.t));
+
+        //fragmentColor = fragmentColor + spec;
+        fragmentColor = vec4(fragmentColor.rgb  * lambert, fragmentColor.a);
+
+        gl_FragColor = fragmentColor;
+        
+
+        //gl_FragColor = vec4(normal,1.0);
+
+        //vec3 N = normalize(vTransformedNormal);
+        //gl_FragColor = vec4(N,1.0);
+        //vec4((N + vec3(1.0, 1.0, 1.0)) / 2.0,1.0);
+    }
+</script>
+<!-- ------------------------------------------------------------- -->
+<!-- ------------------------------------------------------------- -->
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec2 aTextureCoord;
+    attribute vec3 aBinormal;
+    attribute vec3 aTangent;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    varying vec2 vTextureCoord;
+    varying vec4 vPosition;
+    varying vec3 vTransformedNormal;
+
+
+    varying mat3 tbn;
+
+    void main(void) {
+        
+
+
+        
+
+
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+        vTransformedNormal = uNMatrix * aVertexNormal;
+        vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+
+        tbn = mat3(aTangent, aBinormal, vTransformedNormal);
+
+    }
+</script>
+<!-- ------------------------------------------------------------- -->
+
+
+
+
+</head>
+
+
+<body style="background:black ; width:100%; height:100%; " onload="webGLStart();">
+    <div class="canvasDiv"><canvas  id="canvas" style="border: none;" width="800" height="600"></canvas></div>
+    <div class="info">
+    <!--keys:<br/><br/>
+    1. -----------<br/>
+    2. -----------<br/>-->
+     </div>
+</body></html>
